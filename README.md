@@ -96,7 +96,7 @@ notepad config\general.yaml
 
 - `config.json`：`adb_port`、账号来源、通知和上传开关。应用包名/启动页通常保留模板默认值。
 - `general.yaml`：SMTP 发件配置。若不使用邮件，应在 `config.json` 中关闭邮件通知和邮件账号源。
-- `config/config.yaml` 不控制 Windows 定时任务；它不是 `schedule_setup.ps1` 的触发配置。
+- Windows 定时任务由 `schedule_setup.ps1` 管理；该脚本当前固定每天 08:00 触发。
 
 ## 4. 配置账号与可选服务
 
@@ -121,7 +121,7 @@ demo_user_001,replace_with_password,个人消费,示例员工,1,示例门店,仅
 
 ### 4.2 从邮件刷新账号（可选）
 
-当 `account_source.mode` 为 `mail_then_local` 或 `mail`，且 `account_source.mail.enabled` 为 `true` 时，程序会从 IMAP 邮箱查找名为 `accounts.csv` 的附件；未获取到时按配置使用本地账号文件。
+当 `account_source.mode` 为 `mail_then_local` 或 `mail`，且 `account_source.mail.enabled` 为 `true` 时，程序会从 IMAP 邮箱查找名为 `accounts.csv` 的附件。成功获取有效附件后，会整份覆盖本机 `accounts.csv`，附件中的账号、密码和 `execute_flag` 都是本次执行依据；未获取到附件时，才按配置使用本机上一次保存的账号文件及其 flag。
 
 推荐用环境变量提供邮箱凭据：
 
@@ -217,7 +217,9 @@ schtasks /Delete /TN "LearningCheck-Auto" /F
 
 ## 7. 日常运维与安全
 
-程序只处理 `execute_flag=1` 的有效账号。判定已完成的账号会被写为 `0`；未完成、登录失败或其他失败的账号会保留待处理。每个自然周首次运行时，程序会将 `accounts.csv` 的 flag 重置为 `1`，再按当次结果更新。因此 `0` 不是永久停用标记；永久排除账号请按组织流程从 CSV 移除。
+程序只处理 `execute_flag=1` 的有效账号。判定已完成的账号会被写为 `0`；未完成、登录失败或其他失败的账号会保留待处理。每个自然周首次运行时，程序会将当前 `accounts.csv` 的 flag 重置为 `1`，再按当次结果更新。后续运行中，若收到邮件附件，则以附件中维护的 flag 为准；若未收到附件，则保留本机上次运行后的 flag，仅执行仍为 `1` 的账号。
+
+因此，`0` 不是永久停用标记。要永久排除账号，只需在后续邮件附件中移除该账号，或将其 `execute_flag` 设为 `0`；附件成功获取后会覆盖本机缓存。若邮件暂时获取失败但需立即停用，可在本机缓存中先将该账号设为 `0`。
 
 - 将 `config/config.json`、`config/general.yaml` 和账号 CSV 视为敏感文件，限制 NTFS 权限并备份到受控位置。
 - 使用专用、最小权限、可撤销的服务账号；泄露疑虑或人员变动时立即轮换。

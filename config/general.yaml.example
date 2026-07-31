@@ -1,17 +1,4 @@
-adb_address: 127.0.0.1:16384
-check_interval: 10
-concurrency: 1
-emulator_type: mumu
-log_level: info
-log_retention: 7
-notify_level: all
-retry_count: 3
 smtp_password: your_smtp_auth_code
 smtp_port: 587
 smtp_server: smtp.qq.com
 smtp_user: your_email@qq.com
-task_timeout: 30
-wechat_agentid: 'your_agent_id'
-wechat_app_targets: {}
-wechat_corpid: your_corp_id
-wechat_corpsecret: your_corp_secret
