@@ -1,0 +1,6 @@
+name: learning_check
+display_name: 学习检查自动化
+description: 华为学习晨读/大练兵截图与 OCR 检查
+icon: school
+pool_type: simulator
+enabled: true

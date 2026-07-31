@@ -1,0 +1,92 @@
+{
+  "adb_port": "127.0.0.1:16384",
+  "app_package": "com.huawei.iretail.ma",
+  "app_activity": "com.huawei.iretail.salesassistant.splash.SplashActivity",
+  "mumu_exe_path": "C:\\Program Files\\Netease\\MuMu\\nx_main\\MuMuNxMain.exe",
+  "account_source": {
+    "mode": "mail_then_local",
+    "input_dir": "learning_check/input",
+    "full_source": "accounts.csv",
+    "mail": {
+      "enabled": true,
+      "server": "imap.qq.com",
+      "port": 993,
+      "email_env": "LEARNING_CHECK_IMAP_EMAIL",
+      "auth_code_env": "LEARNING_CHECK_IMAP_AUTH_CODE",
+      "folder": "INBOX",
+      "attachment_name": "accounts.csv",
+      "max_scan": 50
+    },
+    "missing_mail_policy": "use_existing_full",
+    "missing_retry_source_policy": "fallback_full",
+    "weekday_strategies": {
+      "1": {
+        "source_type": "full",
+        "batch_size": 30,
+        "ocr_enabled": true
+      },
+      "2": {
+        "source_type": "full",
+        "batch_size": 30,
+        "ocr_enabled": true
+      },
+      "3": {
+        "source_type": "full",
+        "batch_size": 30,
+        "ocr_enabled": true
+      },
+      "4": {
+        "source_type": "full",
+        "batch_size": 30,
+        "ocr_enabled": true,
+        "write_retry_list": true
+      },
+      "5": {
+        "source_type": "previous_uncompleted",
+        "previous_weekday": 4,
+        "batch_size": 30,
+        "ocr_enabled": true,
+        "write_retry_list": true
+      },
+      "6": {
+        "source_type": "previous_uncompleted",
+        "previous_weekday": 5,
+        "batch_size": 30,
+        "ocr_enabled": true,
+        "write_retry_list": true
+      },
+      "7": {
+        "source_type": "previous_uncompleted",
+        "previous_weekday": 6,
+        "batch_size": 30,
+        "ocr_enabled": true,
+        "write_retry_list": false
+      }
+    },
+    "mail.attachment_name": "accounts.csv"
+  },
+  "automation": {
+    "batch_size": 30,
+    "ocr_timeout_seconds": 300,
+    "ocr_enabled": true,
+    "retention_days": 14,
+    "ocr_workers": 2
+  },
+  "notify_enabled": true,
+  "notify_type": [
+    "email"
+  ],
+  "notify_wechat_app_target": "",
+  "notify_email_target": "your_email@example.com",
+  "mock_mode": false,
+  "upload": {
+    "enabled": true,
+    "mode": "http",
+    "mcp_host": "your_mcp_host",
+    "mcp_port": 8082,
+    "owner_key": "your_owner_key",
+    "remote_path": "learning_check",
+    "keep_history": true,
+    "history_retention_days": 30
+  }
+}

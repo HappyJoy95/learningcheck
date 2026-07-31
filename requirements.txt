@@ -1,0 +1,11 @@
+# Python 依赖
+pyyaml>=6.0
+python-dotenv>=1.0.0
+requests>=2.31.0
+
+# OCR 分析 (可选，不安装则关闭 OCR)
+paddleocr>=2.7.0
+paddlepaddle>=2.6.0
+
+# 图片处理
+Pillow>=10.0.0

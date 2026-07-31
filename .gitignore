@@ -1,0 +1,45 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Environment variables
+.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Project specific
+data/learning_check/
+data/test/
+data/input/accounts.csv
+
+# Config with sensitive info (use .example files as template)
+config/config.json
+config/general.yaml
+
+# MiMoCode
+.mimocode/
+
+# Logs
+*.log
+logs/
