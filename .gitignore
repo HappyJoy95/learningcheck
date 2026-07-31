@@ -40,6 +40,9 @@ config/general.yaml
 # MiMoCode
 .mimocode/
 
+# Agent-generated planning and design notes
+docs/superpowers/
+
 # Logs
 *.log
 logs/
