@@ -313,6 +313,69 @@ def check_login_failed_popup(port):
     return False
 
 
+# 登录后弹窗关键词 → (按钮文本, 按钮坐标)
+POST_LOGIN_POPUPS = {
+    "用户协议": ("同意", (720, 1650)),
+    "隐私政策": ("同意", (720, 1650)),
+    "隐私协议": ("同意", (720, 1650)),
+    "服务条款": ("同意", (720, 1650)),
+    "个人信息保护": ("同意", (720, 1650)),
+    "已阅读并同意": ("同意", (720, 1650)),
+    "我知道了": ("我知道了", (720, 1650)),
+    "暂不升级": ("暂不升级", (720, 1650)),
+    "以后再说": ("以后再说", (720, 1650)),
+    "取消更新": ("取消更新", (720, 1650)),
+}
+
+
+def check_and_dismiss_post_login_popup(port, log_callback=None):
+    """检测并关闭登录后可能出现的弹窗（用户协议、隐私政策、更新提示等）
+
+    Returns:
+        True 如果检测到并处理了弹窗，False 如果没有检测到弹窗
+    """
+    xml = dump_ui(port)
+    if not xml:
+        return False
+
+    for keyword, (btn_text, btn_coord) in POST_LOGIN_POPUPS.items():
+        if keyword in xml:
+            if log_callback:
+                log_callback(f"检测到登录后弹窗: {keyword}，点击 [{btn_text}]")
+            # 优先通过文本查找按钮坐标
+            btn_bounds = find_element_bounds(xml, btn_text)
+            if btn_bounds:
+                x = (btn_bounds[0] + btn_bounds[2]) // 2
+                y = (btn_bounds[1] + btn_bounds[3]) // 2
+            else:
+                x, y = btn_coord
+            run_adb_command(
+                [ADB_EXE, '-s', port, 'shell', 'input', 'tap', str(x), str(y)],
+                timeout=10,
+            )
+            time.sleep(2)
+            return True
+
+    # 兜底：检测是否有未知弹窗带"同意"或"确定"按钮
+    if "同意" in xml and ("协议" in xml or "政策" in xml or "条款" in xml or "保护" in xml):
+        btn_bounds = find_element_bounds(xml, "同意")
+        if btn_bounds:
+            x = (btn_bounds[0] + btn_bounds[2]) // 2
+            y = (btn_bounds[1] + btn_bounds[3]) // 2
+        else:
+            x, y = 720, 1650
+        if log_callback:
+            log_callback("检测到未知协议弹窗，点击 [同意]")
+        run_adb_command(
+            [ADB_EXE, '-s', port, 'shell', 'input', 'tap', str(x), str(y)],
+            timeout=10,
+        )
+        time.sleep(2)
+        return True
+
+    return False
+
+
 # ==================== 截图合成 ====================
 
 def combine_screenshots(screenshot1, screenshot2, store_name, user_name, username):
@@ -477,6 +540,13 @@ class AutomationWorkflow:
             time.sleep(2)
             password_expire = True
 
+        # 检测登录后弹窗（用户协议、隐私政策等）
+        for _ in range(3):
+            if check_and_dismiss_post_login_popup(self.adb_port, log_callback=self._log):
+                self._log("登录后弹窗已处理")
+            else:
+                break
+
         login_activity = get_current_activity(self.adb_port)
         self._log(f"点击登录后 Activity({5}s): {login_activity}")
         login_keywords = ["login", "Login", "sign", "Sign", "splash", "Splash", "auth", "welcome", "MssLogin"]
@@ -490,6 +560,9 @@ class AutomationWorkflow:
             logged_in = False
             for retry_round in range(2):
                 for attempt in range(20):
+                    # 每次循环都检测登录后弹窗
+                    check_and_dismiss_post_login_popup(self.adb_port, log_callback=self._log)
+
                     current = get_current_activity(self.adb_port)
                     self._log(f"  [轮{retry_round+1}][{attempt+1}/20] Activity: {current}")
                     if current and is_home_activity(current):
