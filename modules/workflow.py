@@ -876,8 +876,9 @@ class AutomationWorkflow:
         for index, account in enumerate(accounts, 1):
             self._check_stopped()
 
-            check_cmd = run_adb_command([ADB_EXE, '-s', self.adb_port, 'get-state'], timeout=5)
-            if check_cmd.returncode != 0 or b"device" not in check_cmd.stdout:
+            # 必须用 run_adb_with_output：run_adb_command 丢弃 stdout，会导致断连判断永远成立
+            check_cmd = run_adb_with_output([ADB_EXE, '-s', self.adb_port, 'get-state'], timeout=5)
+            if check_cmd.returncode != 0 or check_cmd.stdout.strip() != b"device":
                 self._log("ADB 设备断开，尝试重连...")
                 time.sleep(3)
                 if not self.adb.connect_device():
