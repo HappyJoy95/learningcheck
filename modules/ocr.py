@@ -121,60 +121,63 @@ class LearningOCR:
         return lines
 
     def _check_chendu_by_color(self, image_path: str, lines: List[Dict], week_num: int) -> str:
-        """通过W序号前面符号的颜色判断晨读是否完成"""
+        """通过W序号前面符号的颜色判断本周晨读状态（绿=已完成, 蓝=进行中, 灰=未完成）"""
         week_text = f"W{week_num}"
         if not lines:
             return f"未完成({week_text}未找到)"
-        
+
         # 查找W序号位置
         week_line = None
         for line in lines:
             if week_text in line["text"].replace(" ", ""):
                 week_line = line
                 break
-        
+
         if not week_line:
             return f"未完成({week_text}未找到)"
-        
+
         try:
             from PIL import Image
             img = Image.open(image_path)
-            
+
             week_x = int(week_line["center_x"])
             week_y = int(week_line["center_y"])
-            
-            # 扫描W序号左侧20-130像素范围，寻找有颜色的标记
+
+            # 扫描W序号左侧20-130像素范围，识别三种状态标记颜色
             has_green = False
-            has_blue_or_gray = False
-            
+            has_blue = False
+            has_gray = False
+
             for offset in range(20, 140, 5):
                 sx = week_x - offset
                 if sx < 0 or sx >= img.width:
                     continue
-                
-                # 采样上下几行的像素
+
                 for dy in range(-15, 20, 5):
                     sy = week_y + dy
                     if sy < 0 or sy >= img.height:
                         continue
-                    
+
                     r, g, b = img.getpixel((sx, sy))[:3]
-                    
-                    # 绿色标记：G通道最高且明显
+
+                    # 绿色标记(✅已完成)：G通道主导且明显高于R和B
                     if g > 100 and g > r and g > b * 0.9:
                         has_green = True
-                    # 蓝色标记：B通道高
+                    # 蓝色标记(🔵进行中)：B通道主导
                     elif b > 150 and b > r * 1.5 and b > g * 1.5:
-                        has_blue_or_gray = True
-                    # 灰色标记：各通道相近且不是白色
-                    elif 50 < r < 200 and 50 < g < 200 and 50 < b < 200 and abs(r-g) < 30 and abs(g-b) < 30:
-                        has_blue_or_gray = True
-            
+                        has_blue = True
+                    # 灰色标记(⚪未完成)：三通道接近，非白非黑
+                    elif abs(r - g) < 30 and abs(g - b) < 30 and 100 < r < 245:
+                        has_gray = True
+
             if has_green:
                 return f"已完成({week_text}绿色标记)"
-            else:
-                return f"未完成({week_text}非绿色标记)"
-                
+            if has_blue:
+                return f"进行中({week_text}蓝色标记)"
+            if has_gray:
+                return f"未完成({week_text}灰色标记)"
+            return f"未完成({week_text}无标记)"
+
         except Exception as e:
             return f"未完成({week_text}颜色检测失败: {e})"
 
