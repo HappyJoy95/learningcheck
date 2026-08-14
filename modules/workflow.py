@@ -69,7 +69,7 @@ COORDS = {
 
     # 课程
     "first_course": (450, 500),
-    "schedule_tab": (430, 540),
+    "schedule_tab": (351, 540),
 
     # 返回
     "back_button": (99, 126),
@@ -606,7 +606,6 @@ class AutomationWorkflow:
 
         # 2. 点击课程
         self.ui.tap(COORDS["first_course"][0], COORDS["first_course"][1], 1)
-        time.sleep(3)
 
         # 3. 等待赛道加载
         tracks_loaded = False
@@ -737,7 +736,17 @@ class AutomationWorkflow:
 
         # 3. 点击课程
         self.ui.tap(COORDS["first_course"][0], COORDS["first_course"][1], 1)
-        time.sleep(3)
+
+        # 等待课程详情页加载
+        for i in range(10):
+            xml = dump_ui(self.adb_port)
+            if "班级简介" in xml and "日程表" in xml:
+                self._log(f"课程详情页已加载 ({i+1}次检测)")
+                break
+            self._log(f"等待课程详情页... ({i+1}/10)")
+            time.sleep(2)
+        else:
+            self._log("课程详情页加载超时，继续尝试")
 
         # 4. 点击日程表（带重试）
         schedule_clicked = False
