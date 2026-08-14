@@ -183,7 +183,6 @@ class LearningOCR:
         return self._check_chendu_by_color(image_path, lines, week_num)
 
     def _check_dalianbing_lines(self, lines: List[Dict]) -> str:
-        # 在所有文本中查找课程状态，不限制位置
         today = datetime.now()
         week_end = (today + timedelta(days=(6 - today.weekday()))).date()
 
@@ -194,11 +193,19 @@ class LearningOCR:
         # 状态标记（支持中英文和带空格的情况）
         unfinished_markers = ["To Learn", "去学习", "去 学 习", "未完成", "未 完 成", "待学习", "待 学 习"]
         finished_markers = ["Completed", "已完成", "完 成", "已完成学习", "已 完 成"]
+        # 大练兵在合成图右半边(x≥1400)，排除非课程元信息行
+        metadata_keywords = ["开班时间", "结班时间", "场次", "日程表学习截止时间"]
 
-        # 按垂直位置排序，从上到下扫描
+        # 按垂直位置排序，从上到下扫描，只看右半边（大练兵区域）
         sorted_lines = sorted(lines, key=lambda item: item["center_y"])
-        
+
         for index, line in enumerate(sorted_lines):
+            # 只看合成图右半边（大练兵区域），排除左侧晨读区的日期
+            if line["center_x"] < 1400:
+                continue
+            # 跳过开班时间/结班时间/场次等非课程元信息行
+            if any(kw in line["text"] for kw in metadata_keywords):
+                continue
             match = date_pattern.search(line["text"])
             if not match:
                 continue
@@ -209,7 +216,7 @@ class LearningOCR:
             # 检查当前行及后续几行的状态标记
             block_text = " ".join(item["text"] for item in sorted_lines[index:index + 10])
             block_text_no_space = block_text.replace(" ", "")
-            
+
             if any(marker in block_text or marker.replace(" ", "") in block_text_no_space for marker in unfinished_markers):
                 has_unfinished = True
             if any(marker in block_text or marker.replace(" ", "") in block_text_no_space for marker in finished_markers):
@@ -220,7 +227,8 @@ class LearningOCR:
         if has_finished and found_valid_course:
             return "已完成"
         if found_valid_course:
-            return "已完成"
+            # 找到日期但无状态标记（OCR漏读或截图未拍到）→ 保守判未完成
+            return "未完成(无状态标记)"
         return "未完成(未识别到本周课程)"
 
     def check_dalianbing(self, image_path: str) -> str:
