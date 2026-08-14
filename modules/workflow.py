@@ -866,7 +866,7 @@ class AutomationWorkflow:
 
         # 确保 ADB 已连接
         if not self.adb.connect_device():
-            self._log("ERROR", f"ADB 连接失败: {self.adb_port}，请检查模拟器是否启动")
+            self._log(f"ADB 连接失败: {self.adb_port}，请检查模拟器是否启动")
             return []
 
         results = []
