@@ -126,10 +126,10 @@ class LearningOCR:
         if not lines:
             return f"未完成({week_text}未找到)"
 
-        # 查找W序号位置
+        # 查找W序号位置（精确匹配，避免匹配到"【W33】业务学"等含W33的文本）
         week_line = None
         for line in lines:
-            if week_text in line["text"].replace(" ", ""):
+            if line["text"].strip().replace(" ", "") == week_text:
                 week_line = line
                 break
 
